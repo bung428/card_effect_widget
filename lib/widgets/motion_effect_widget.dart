@@ -1,9 +1,8 @@
-import 'dart:async';
-import 'dart:ui' as ui;
-
+import 'package:card_effect_widget/enums/image_source_type.dart';
 import 'package:card_effect_widget/models/configuration.dart';
 import 'package:card_effect_widget/widgets/shimmer_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import 'filter_widget.dart';
 import 'mask_widget.dart';
@@ -19,11 +18,12 @@ class MotionEffectWidget extends StatefulWidget {
   final FilterConfiguration? filter;
   final MaskConfiguration? mask;
   final ShimmerConfiguration? shimmer;
+  final ImageSourceType sourceType;
 
-  const MotionEffectWidget({
-    super.key,
+  const MotionEffectWidget._({
     required this.image,
     required this.touchCallback,
+    this.sourceType = ImageSourceType.asset,
     this.maxHeight = 360,
     this.aspectRatio = 734 / 1024,
     this.glare,
@@ -31,6 +31,40 @@ class MotionEffectWidget extends StatefulWidget {
     this.mask,
     this.shimmer,
   });
+
+  const MotionEffectWidget.asset({
+    super.key,
+    required this.image,
+    required this.touchCallback,
+    this.sourceType = ImageSourceType.asset,
+    this.maxHeight = 360,
+    this.aspectRatio = 734 / 1024,
+    this.glare,
+    this.filter,
+    this.mask,
+    this.shimmer,
+  });
+
+  factory MotionEffectWidget.network({
+    required String image,
+    required TouchCallback touchCallback,
+    double maxHeight = 360,
+    double aspectRatio = 734 / 1024,
+    GlareConfiguration? glare,
+    FilterConfiguration? filter,
+    MaskConfiguration? mask,
+    ShimmerConfiguration? shimmer,
+  }) => MotionEffectWidget._(
+    image: image,
+    touchCallback: touchCallback,
+    maxHeight: maxHeight,
+    aspectRatio: aspectRatio,
+    glare: glare,
+    filter: filter,
+    mask: mask,
+    shimmer: shimmer,
+    sourceType: ImageSourceType.network,
+  );
 
   @override
   State createState() => _MotionEffectWidgetState();
@@ -60,6 +94,12 @@ class _MotionEffectWidgetState extends State<MotionEffectWidget> with SingleTick
       vsync: this,
       duration: const Duration(milliseconds: 500), // Animation duration
     );
+
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (widgetKey.currentContext == null) return;
+      final box = widgetKey.currentContext!.findRenderObject() as RenderBox;
+      _setChildSize(box.size);
+    });
   }
 
   @override
@@ -69,25 +109,17 @@ class _MotionEffectWidgetState extends State<MotionEffectWidget> with SingleTick
   }
 
   void _setChildSize(Size size) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        if (childSize == Size.zero) {
-          childSize = size;
-          _lightX = size.width / 2;
-          _lightY = size.height / 2;
-          setState(() {});
-        }
-      }
-    });
+    if (!mounted) return;
+    if (childSize == Size.zero) {
+      childSize = size;
+      _lightX = size.width / 2;
+      _lightY = size.height / 2;
+      setState(() {});
+    }
   }
 
   void _onPointerHover(Offset localPosition) {
-    if (childSize == Size.zero) {
-      if (!mounted) return;
-      if (widgetKey.currentContext == null) return;
-      final box = widgetKey.currentContext!.findRenderObject() as RenderBox;
-      _setChildSize(box.size);
-    }
+    if (!mounted) return;
 
     final centerX = childSize.width / 2;
     final centerY = childSize.height / 2;
@@ -100,13 +132,13 @@ class _MotionEffectWidgetState extends State<MotionEffectWidget> with SingleTick
     _lightX = localPosition.dx;
     _lightY = localPosition.dy;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
       setState(() {});
     });
   }
 
   void _onPointerExit() async {
+    if (!mounted) return;
     if (childSize == Size.zero) return;
 
     _xRotationAnimation = Tween<double>(begin: _xRotation, end: 0).animate(
@@ -121,83 +153,24 @@ class _MotionEffectWidgetState extends State<MotionEffectWidget> with SingleTick
     _lightYAnimation = Tween<double>(begin: _lightY, end: childSize.height / 2).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
-    _controller.forward(from: 0);
 
-    _controller.addListener(() {
-      if (!mounted) return;
-      setState(() {
-        _xRotation = _xRotationAnimation.value;
-        _yRotation = _yRotationAnimation.value;
-        _lightX = _lightXAnimation.value;
-        _lightY = _lightYAnimation.value;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _controller.forward(from: 0);
+
+      _controller.addListener(() {
+        setState(() {
+          _xRotation = _xRotationAnimation.value;
+          _yRotation = _yRotationAnimation.value;
+          _lightX = _lightXAnimation.value;
+          _lightY = _lightYAnimation.value;
+        });
       });
     });
   }
 
-  Future<ui.Image> convertImage(AssetImage assetImage) {
-    final Image image = Image(image: assetImage);
-    final Completer<ui.Image> completer = Completer();
-
-    image.image.resolve(const ImageConfiguration()).addListener(
-        ImageStreamListener((ImageInfo info, bool synchronousCall) {
-          completer.complete(info.image);
-        })
-    );
-    return completer.future;
-  }
-
   @override
   Widget build(BuildContext context) {
-    Widget child = Image.asset(
-      widget.image,
-      fit: BoxFit.cover,
-    );
-    if (widget.mask != null) {
-      child = MaskWidget(
-        isOnHover: isOnHover,
-        image: widget.mask!.maskImg,
-        width: childSize.width,
-        height: childSize.height,
-        mode: widget.mask!.blendMode,
-        child: child
-      );
-    }
-    if (widget.filter != null) {
-      child = FilterWidget(
-        filters: widget.filter!.filters,
-        isOnHover: isOnHover,
-        child: child
-      );
-    }
-    if (widget.shimmer != null) {
-      child = ShimmerWidget(
-        end: widget.shimmer!.end,
-        begin: widget.shimmer!.begin,
-        stops: widget.shimmer!.stops,
-        colors: widget.shimmer!.colors,
-        tileMode: widget.shimmer!.tileMode,
-        blendMode: widget.shimmer!.blendMode,
-        child: child,
-      );
-    }
-    if (widget.glare != null) {
-      child = ShaderMask(
-        shaderCallback: (rect) {
-          if (mounted) {
-            _setChildSize(rect.size);
-          }
-          return RadialGradient(
-            center: Alignment((_lightX / rect.width) * 2 - 1, (_lightY / rect.height) * 2 - 1),
-            radius: widget.glare!.radius,
-            tileMode: widget.glare!.tileMode,
-            colors: widget.glare!.colors,
-            stops: widget.glare!.stops,
-          ).createShader(rect);
-        },
-        blendMode: widget.glare!.blendMode,
-        child: child
-      );
-    }
+    var child = _buildMotionWidgetByConfig();
     return LayoutBuilder(
       builder: (context, constraints) {
         return Container(
@@ -256,5 +229,62 @@ class _MotionEffectWidgetState extends State<MotionEffectWidget> with SingleTick
         );
       },
     );
+  }
+
+  Widget _buildMotionWidgetByConfig() {
+    Widget child = switch (widget.sourceType) {
+      ImageSourceType.asset => Image.asset(
+        widget.image,
+        fit: BoxFit.cover,
+      ),
+      ImageSourceType.network => Image.network(
+        widget.image,
+        fit: BoxFit.cover,
+      ),
+    };
+    if (widget.mask != null) {
+      child = MaskWidget(
+          isOnHover: isOnHover,
+          image: widget.mask!.maskImg,
+          width: childSize.width,
+          height: childSize.height,
+          mode: widget.mask!.blendMode,
+          child: child
+      );
+    }
+    if (widget.filter != null) {
+      child = FilterWidget(
+          filters: widget.filter!.filters,
+          isOnHover: isOnHover,
+          child: child
+      );
+    }
+    if (widget.shimmer != null) {
+      child = ShimmerWidget(
+        end: widget.shimmer!.end,
+        begin: widget.shimmer!.begin,
+        stops: widget.shimmer!.stops,
+        colors: widget.shimmer!.colors,
+        tileMode: widget.shimmer!.tileMode,
+        blendMode: widget.shimmer!.blendMode,
+        child: child,
+      );
+    }
+    if (widget.glare != null) {
+      child = ShaderMask(
+          shaderCallback: (rect) {
+            return RadialGradient(
+              center: Alignment((_lightX / rect.width) * 2 - 1, (_lightY / rect.height) * 2 - 1),
+              radius: widget.glare!.radius,
+              tileMode: widget.glare!.tileMode,
+              colors: widget.glare!.colors,
+              stops: widget.glare!.stops,
+            ).createShader(rect);
+          },
+          blendMode: widget.glare!.blendMode,
+          child: child
+      );
+    }
+    return child;
   }
 }
