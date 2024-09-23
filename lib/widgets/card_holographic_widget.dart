@@ -9,7 +9,7 @@ import 'mask_widget.dart';
 
 typedef TouchCallback = void Function(bool isTouch);
 
-class MotionEffectWidget extends StatefulWidget {
+class CardHolographicWidget extends StatefulWidget {
   final String image;
   final double maxHeight;
   final double aspectRatio;
@@ -17,10 +17,10 @@ class MotionEffectWidget extends StatefulWidget {
   final GlareConfiguration? glare;
   final FilterConfiguration? filter;
   final MaskConfiguration? mask;
-  final ShimmerConfiguration? shimmer;
+  // final ShimmerConfiguration? shimmer;
   final ImageSourceType sourceType;
 
-  const MotionEffectWidget._({
+  const CardHolographicWidget._({
     required this.image,
     required this.touchCallback,
     this.sourceType = ImageSourceType.asset,
@@ -29,10 +29,10 @@ class MotionEffectWidget extends StatefulWidget {
     this.glare,
     this.filter,
     this.mask,
-    this.shimmer,
+    // this.shimmer,
   });
 
-  const MotionEffectWidget.asset({
+  const CardHolographicWidget.asset({
     super.key,
     required this.image,
     required this.touchCallback,
@@ -42,10 +42,10 @@ class MotionEffectWidget extends StatefulWidget {
     this.glare,
     this.filter,
     this.mask,
-    this.shimmer,
+    // this.shimmer,
   });
 
-  factory MotionEffectWidget.network({
+  factory CardHolographicWidget.network({
     required String image,
     required TouchCallback touchCallback,
     double maxHeight = 360,
@@ -54,7 +54,7 @@ class MotionEffectWidget extends StatefulWidget {
     FilterConfiguration? filter,
     MaskConfiguration? mask,
     ShimmerConfiguration? shimmer,
-  }) => MotionEffectWidget._(
+  }) => CardHolographicWidget._(
     image: image,
     touchCallback: touchCallback,
     maxHeight: maxHeight,
@@ -62,15 +62,15 @@ class MotionEffectWidget extends StatefulWidget {
     glare: glare,
     filter: filter,
     mask: mask,
-    shimmer: shimmer,
+    // shimmer: shimmer,
     sourceType: ImageSourceType.network,
   );
 
   @override
-  State createState() => _MotionEffectWidgetState();
+  State createState() => _CardHolographicWidgetState();
 }
 
-class _MotionEffectWidgetState extends State<MotionEffectWidget> with SingleTickerProviderStateMixin {
+class _CardHolographicWidgetState extends State<CardHolographicWidget> with SingleTickerProviderStateMixin {
   double _xRotation = 0;
   double _yRotation = 0;
   double _lightX = 0;
@@ -259,17 +259,17 @@ class _MotionEffectWidgetState extends State<MotionEffectWidget> with SingleTick
           child: child
       );
     }
-    if (widget.shimmer != null) {
-      child = ShimmerWidget(
-        end: widget.shimmer!.end,
-        begin: widget.shimmer!.begin,
-        stops: widget.shimmer!.stops,
-        colors: widget.shimmer!.colors,
-        tileMode: widget.shimmer!.tileMode,
-        blendMode: widget.shimmer!.blendMode,
-        child: child,
-      );
-    }
+    // if (widget.shimmer != null) {
+    //   child = ShimmerWidget(
+    //     end: widget.shimmer!.end,
+    //     begin: widget.shimmer!.begin,
+    //     stops: widget.shimmer!.stops,
+    //     colors: widget.shimmer!.colors,
+    //     tileMode: widget.shimmer!.tileMode,
+    //     blendMode: widget.shimmer!.blendMode,
+    //     child: child,
+    //   );
+    // }
     if (widget.glare != null) {
       child = ShaderMask(
           shaderCallback: (rect) {

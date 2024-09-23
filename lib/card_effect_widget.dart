@@ -1,1 +1,0 @@
-export 'package:card_effect_widget/widgets/motion_effect_widget.dart';

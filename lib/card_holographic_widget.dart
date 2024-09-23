@@ -1,0 +1,1 @@
+export 'package:card_effect_widget/widgets/card_holographic_widget.dart';
