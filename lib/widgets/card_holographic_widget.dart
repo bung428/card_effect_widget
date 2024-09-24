@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:card_effect_widget/enums/image_source_type.dart';
 import 'package:card_effect_widget/models/configuration.dart';
-import 'package:card_effect_widget/widgets/shimmer_widget.dart';
+import 'package:card_effect_widget/overlay_mixin.dart';
+import 'package:card_effect_widget/widgets/motion_animate_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 
 import 'filter_widget.dart';
 import 'mask_widget.dart';
@@ -17,8 +19,8 @@ class CardHolographicWidget extends StatefulWidget {
   final GlareConfiguration? glare;
   final FilterConfiguration? filter;
   final MaskConfiguration? mask;
-  // final ShimmerConfiguration? shimmer;
   final ImageSourceType sourceType;
+  // final ShimmerConfiguration? shimmer;
 
   const CardHolographicWidget._({
     required this.image,
@@ -29,7 +31,6 @@ class CardHolographicWidget extends StatefulWidget {
     this.glare,
     this.filter,
     this.mask,
-    // this.shimmer,
   });
 
   const CardHolographicWidget.asset({
@@ -42,7 +43,6 @@ class CardHolographicWidget extends StatefulWidget {
     this.glare,
     this.filter,
     this.mask,
-    // this.shimmer,
   });
 
   factory CardHolographicWidget.network({
@@ -62,7 +62,6 @@ class CardHolographicWidget extends StatefulWidget {
     glare: glare,
     filter: filter,
     mask: mask,
-    // shimmer: shimmer,
     sourceType: ImageSourceType.network,
   );
 
@@ -70,168 +69,105 @@ class CardHolographicWidget extends StatefulWidget {
   State createState() => _CardHolographicWidgetState();
 }
 
-class _CardHolographicWidgetState extends State<CardHolographicWidget> with SingleTickerProviderStateMixin {
-  double _xRotation = 0;
-  double _yRotation = 0;
+class _CardHolographicWidgetState extends State<CardHolographicWidget>
+    with SingleTickerProviderStateMixin, OverlayMixin {
   double _lightX = 0;
   double _lightY = 0;
-  Size childSize = Size.zero;
 
-  bool isOnHover = false;
+  final _isOnHover = StreamController<bool>.broadcast()..add(false);
+  Stream<bool> get isOnHover => _isOnHover.stream;
 
-  final widgetKey = GlobalKey();
+  Size size = Size.zero;
 
-  late AnimationController _controller;
-  late Animation<double> _xRotationAnimation;
-  late Animation<double> _yRotationAnimation;
-  late Animation<double> _lightXAnimation;
-  late Animation<double> _lightYAnimation;
+  final _overlayKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500), // Animation duration
-    );
-
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (widgetKey.currentContext == null) return;
-      final box = widgetKey.currentContext!.findRenderObject() as RenderBox;
-      _setChildSize(box.size);
-    });
+    initializeOverlay(this);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _isOnHover.close();
     super.dispose();
-  }
-
-  void _setChildSize(Size size) {
-    if (!mounted) return;
-    if (childSize == Size.zero) {
-      childSize = size;
-      _lightX = size.width / 2;
-      _lightY = size.height / 2;
-      setState(() {});
-    }
-  }
-
-  void _onPointerHover(Offset localPosition) {
-    if (!mounted) return;
-
-    final centerX = childSize.width / 2;
-    final centerY = childSize.height / 2;
-
-    var x = (localPosition.dx - centerX) / centerX;
-    var y = (localPosition.dy - centerY) / centerY;
-
-    _xRotation = y * -0.5;
-    _yRotation = x * 0.5;
-    _lightX = localPosition.dx;
-    _lightY = localPosition.dy;
-
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      setState(() {});
-    });
-  }
-
-  void _onPointerExit() async {
-    if (!mounted) return;
-    if (childSize == Size.zero) return;
-
-    _xRotationAnimation = Tween<double>(begin: _xRotation, end: 0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-    _yRotationAnimation = Tween<double>(begin: _yRotation, end: 0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-    _lightXAnimation = Tween<double>(begin: _lightX, end: childSize.width / 2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-    _lightYAnimation = Tween<double>(begin: _lightY, end: childSize.height / 2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      _controller.forward(from: 0);
-
-      _controller.addListener(() {
-        setState(() {
-          _xRotation = _xRotationAnimation.value;
-          _yRotation = _yRotationAnimation.value;
-          _lightX = _lightXAnimation.value;
-          _lightY = _lightYAnimation.value;
-        });
-      });
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    var child = _buildMotionWidgetByConfig();
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          key: widgetKey,
-          height: widget.maxHeight,
-          color: Colors.transparent,
-          child: AspectRatio(
-            aspectRatio: widget.aspectRatio,
-            child: MouseRegion(
-              onHover: (event) {
-                isOnHover = true;
-                widget.touchCallback.call(true);
-
-                _onPointerHover(event.localPosition);
-              },
-              onExit: (event) {
-                isOnHover = false;
-                widget.touchCallback.call(false);
-
-                _onPointerExit();
-              },
-              child: Listener(
-                onPointerHover: (details) {
-                  isOnHover = true;
-                  widget.touchCallback.call(true);
-
-                  _onPointerHover(details.localPosition);
-                },
-                onPointerMove: (details) {
-                  isOnHover = true;
-                  widget.touchCallback.call(true);
-
-                  _onPointerHover(details.localPosition);
-                },
-                onPointerUp: (_) {
-                  isOnHover = false;
-                  widget.touchCallback.call(false);
-
-                  _onPointerExit();
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.001)
-                    ..rotateX(_xRotation)
-                    ..rotateY(_yRotation),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: child,
-                  ),
-                ),
-              ),
-            ),
+    Widget child = StreamBuilder<bool>(
+      stream: isOnHover,
+      initialData: false,
+      builder: (context, snapshot) {
+        if (snapshot.data == null) return const SizedBox.shrink();
+        return MotionAnimateWidget(
+          maxHeight: widget.maxHeight,
+          aspectRatio: widget.aspectRatio,
+          sizeCallback: (size) {
+            if (size != Size.zero) {
+              this.size = size;
+              setWidgetSize(size);
+              setState(() {});
+            }
+          },
+          touchCallback: (value) {
+            widget.touchCallback.call(value);
+            _isOnHover.add(value);
+          },
+          offsetCallback: (double x, double y) {
+            _lightX = x;
+            _lightY = y;
+            setState(() {});
+          },
+          child: _CardImageWidget(
+            image: widget.image,
+            sourceType: widget.sourceType,
+            lightPoints: (_lightX, _lightY),
+            isOnHover: snapshot.data!,
+            size: size,
+            glare: widget.glare,
+            filter: widget.filter,
+            mask: widget.mask,
           ),
         );
-      },
+      }
     );
+    return !isOverlay ? GestureDetector(
+      key: _overlayKey,
+      onTap: () => showOverlay(context, _overlayKey.currentContext, child),
+      child: child,
+    ) : SizedBox(width: size.width, height: size.height,);
   }
+}
 
-  Widget _buildMotionWidgetByConfig() {
+class _CardImageWidget extends StatefulWidget {
+  final String image;
+  final bool isOnHover;
+  final Size size;
+  final (double, double) lightPoints;
+  final GlareConfiguration? glare;
+  final FilterConfiguration? filter;
+  final MaskConfiguration? mask;
+  final ImageSourceType sourceType;
+
+  const _CardImageWidget({
+    required this.image,
+    required this.sourceType,
+    required this.lightPoints,
+    required this.isOnHover,
+    required this.size,
+    this.glare,
+    this.filter,
+    this.mask,
+  });
+
+  @override
+  State<_CardImageWidget> createState() => _CardImageWidgetState();
+}
+
+class _CardImageWidgetState extends State<_CardImageWidget> {
+  @override
+  Widget build(BuildContext context) {
     Widget child = switch (widget.sourceType) {
       ImageSourceType.asset => Image.asset(
         widget.image,
@@ -244,10 +180,10 @@ class _CardHolographicWidgetState extends State<CardHolographicWidget> with Sing
     };
     if (widget.mask != null) {
       child = MaskWidget(
-          isOnHover: isOnHover,
+          isOnHover: widget.isOnHover,
           image: widget.mask!.maskImg,
-          width: childSize.width,
-          height: childSize.height,
+          width: widget.size.width,
+          height: widget.size.height,
           mode: widget.mask!.blendMode,
           child: child
       );
@@ -255,26 +191,18 @@ class _CardHolographicWidgetState extends State<CardHolographicWidget> with Sing
     if (widget.filter != null) {
       child = FilterWidget(
           filters: widget.filter!.filters,
-          isOnHover: isOnHover,
+          isOnHover: widget.isOnHover,
           child: child
       );
     }
-    // if (widget.shimmer != null) {
-    //   child = ShimmerWidget(
-    //     end: widget.shimmer!.end,
-    //     begin: widget.shimmer!.begin,
-    //     stops: widget.shimmer!.stops,
-    //     colors: widget.shimmer!.colors,
-    //     tileMode: widget.shimmer!.tileMode,
-    //     blendMode: widget.shimmer!.blendMode,
-    //     child: child,
-    //   );
-    // }
     if (widget.glare != null) {
       child = ShaderMask(
           shaderCallback: (rect) {
             return RadialGradient(
-              center: Alignment((_lightX / rect.width) * 2 - 1, (_lightY / rect.height) * 2 - 1),
+              center: Alignment(
+                (widget.lightPoints.$1 / rect.width) * 2 - 1,
+                (widget.lightPoints.$2 / rect.height) * 2 - 1
+              ),
               radius: widget.glare!.radius,
               tileMode: widget.glare!.tileMode,
               colors: widget.glare!.colors,
