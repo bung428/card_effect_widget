@@ -16,10 +16,14 @@ mixin OverlayMixin<T extends StatefulWidget> on State<T> {
   Offset end = Offset.zero;
   Size? widgetSize;
 
+  int? _overlayAnimateAngle;
   bool _isCompleted = false;
   bool isOverlay = false;
 
-  void initializeOverlay(TickerProvider vsync) {
+  void initializeOverlay(TickerProvider vsync, [int? angle]) {
+    if (angle != null) {
+      _overlayAnimateAngle = angle;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final center = MediaQuery.of(context).size.center(Offset.zero);
       _centerOffset = Offset(center.dx, center.dy);
@@ -31,8 +35,8 @@ mixin OverlayMixin<T extends StatefulWidget> on State<T> {
       duration: const Duration(seconds: 1),
     );
 
-    _rotationAnimation = Tween<double>(begin: 0, end: pi * 8).animate(
-      CurvedAnimation(
+    _rotationAnimation = Tween<double>(begin: 0, end: pi * (_overlayAnimateAngle ?? 2))
+        .animate(CurvedAnimation(
         parent: _overlayController,
         curve: Curves.easeInOut,
       ),
@@ -71,13 +75,12 @@ mixin OverlayMixin<T extends StatefulWidget> on State<T> {
 
   void showOverlay(BuildContext context, BuildContext? keyContext, Widget child) {
     if (keyContext == null) return;
+    begin = Offset.zero;
+    end = Offset.zero;
 
-    if (widgetSize == null || begin == Offset.zero || end == Offset.zero) {
-      final box = keyContext.findRenderObject() as RenderBox;
-      begin = box.localToGlobal(Offset.zero);
-
-      end = _centerOffset - Offset(widgetSize!.width / 2, widgetSize!.height / 2);
-    }
+    final box = keyContext.findRenderObject() as RenderBox;
+    begin = box.localToGlobal(Offset.zero);
+    end = _centerOffset - Offset(widgetSize!.width / 2, widgetSize!.height / 2);
 
     _positionAnimation = Tween<Offset>(
       begin: begin,

@@ -8,6 +8,7 @@ typedef SizeCallback = void Function(Size size);
 class MotionAnimateWidget extends StatefulWidget {
   final double maxHeight;
   final double aspectRatio;
+  final double? borderRadius;
   final SizeCallback sizeCallback;
   final TouchCallback touchCallback;
   final OffsetCallback offsetCallback;
@@ -21,6 +22,7 @@ class MotionAnimateWidget extends StatefulWidget {
     required this.touchCallback,
     required this.offsetCallback,
     required this.child,
+    this.borderRadius,
   });
 
   @override
@@ -49,7 +51,7 @@ class _MotionAnimateWidgetState extends State<MotionAnimateWidget>
   void initState() {
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500), // Animation duration
+      duration: const Duration(milliseconds: 500),
     );
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -182,7 +184,7 @@ class _MotionAnimateWidgetState extends State<MotionAnimateWidget>
                     ..rotateX(_xRotation)
                     ..rotateY(_yRotation),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(widget.borderRadius ?? 0),
                     child: widget.child,
                   ),
                 ),

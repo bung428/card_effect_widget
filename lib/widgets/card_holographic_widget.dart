@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:card_effect_widget/enums/image_source_type.dart';
 import 'package:card_effect_widget/models/configuration.dart';
 import 'package:card_effect_widget/overlay_mixin.dart';
+import 'package:card_effect_widget/widgets/glow_animate_widget.dart';
 import 'package:card_effect_widget/widgets/motion_animate_widget.dart';
 import 'package:flutter/material.dart';
 
@@ -13,9 +14,12 @@ typedef TouchCallback = void Function(bool isTouch);
 
 class CardHolographicWidget extends StatefulWidget {
   final String image;
+  final int animateAngle;
   final double maxHeight;
   final double aspectRatio;
+  final double? borderRadius;
   final TouchCallback touchCallback;
+  final GlowConfiguration? glow;
   final GlareConfiguration? glare;
   final FilterConfiguration? filter;
   final MaskConfiguration? mask;
@@ -28,6 +32,9 @@ class CardHolographicWidget extends StatefulWidget {
     this.sourceType = ImageSourceType.asset,
     this.maxHeight = 360,
     this.aspectRatio = 734 / 1024,
+    this.animateAngle = 2,
+    this.borderRadius,
+    this.glow,
     this.glare,
     this.filter,
     this.mask,
@@ -40,16 +47,22 @@ class CardHolographicWidget extends StatefulWidget {
     this.sourceType = ImageSourceType.asset,
     this.maxHeight = 360,
     this.aspectRatio = 734 / 1024,
+    this.borderRadius = 12,
+    this.animateAngle = 2,
     this.glare,
     this.filter,
     this.mask,
+    this.glow,
   });
 
   factory CardHolographicWidget.network({
     required String image,
     required TouchCallback touchCallback,
+    int animateAngle = 2,
     double maxHeight = 360,
     double aspectRatio = 734 / 1024,
+    double borderRadius = 12,
+    GlowConfiguration? glow,
     GlareConfiguration? glare,
     FilterConfiguration? filter,
     MaskConfiguration? mask,
@@ -59,6 +72,9 @@ class CardHolographicWidget extends StatefulWidget {
     touchCallback: touchCallback,
     maxHeight: maxHeight,
     aspectRatio: aspectRatio,
+    borderRadius: borderRadius,
+    animateAngle: animateAngle,
+    glow: glow,
     glare: glare,
     filter: filter,
     mask: mask,
@@ -84,7 +100,7 @@ class _CardHolographicWidgetState extends State<CardHolographicWidget>
   @override
   void initState() {
     super.initState();
-    initializeOverlay(this);
+    initializeOverlay(this, widget.animateAngle);
   }
 
   @override
@@ -100,7 +116,29 @@ class _CardHolographicWidgetState extends State<CardHolographicWidget>
       initialData: false,
       builder: (context, snapshot) {
         if (snapshot.data == null) return const SizedBox.shrink();
+        Widget imageWidget = ClipRRect(
+          borderRadius: BorderRadius.circular(widget.borderRadius ?? 0),
+          child: _CardImageWidget(
+            image: widget.image,
+            sourceType: widget.sourceType,
+            lightPoints: (_lightX, _lightY),
+            isOnHover: snapshot.data!,
+            size: size,
+            borderRadius: widget.borderRadius,
+            glare: widget.glare,
+            filter: widget.filter,
+            mask: widget.mask,
+          ),
+        );
+        if (widget.glow != null) {
+          imageWidget = GlowAnimateWidget(
+            glow: widget.glow!,
+            borderRadius: widget.borderRadius,
+            child: imageWidget,
+          );
+        }
         return MotionAnimateWidget(
+          borderRadius: widget.borderRadius,
           maxHeight: widget.maxHeight,
           aspectRatio: widget.aspectRatio,
           sizeCallback: (size) {
@@ -119,16 +157,7 @@ class _CardHolographicWidgetState extends State<CardHolographicWidget>
             _lightY = y;
             setState(() {});
           },
-          child: _CardImageWidget(
-            image: widget.image,
-            sourceType: widget.sourceType,
-            lightPoints: (_lightX, _lightY),
-            isOnHover: snapshot.data!,
-            size: size,
-            glare: widget.glare,
-            filter: widget.filter,
-            mask: widget.mask,
-          ),
+          child: imageWidget,
         );
       }
     );
@@ -143,6 +172,7 @@ class _CardHolographicWidgetState extends State<CardHolographicWidget>
 class _CardImageWidget extends StatefulWidget {
   final String image;
   final bool isOnHover;
+  final double? borderRadius;
   final Size size;
   final (double, double) lightPoints;
   final GlareConfiguration? glare;
@@ -156,6 +186,7 @@ class _CardImageWidget extends StatefulWidget {
     required this.lightPoints,
     required this.isOnHover,
     required this.size,
+    this.borderRadius,
     this.glare,
     this.filter,
     this.mask,
@@ -197,20 +228,22 @@ class _CardImageWidgetState extends State<_CardImageWidget> {
     }
     if (widget.glare != null) {
       child = ShaderMask(
-          shaderCallback: (rect) {
-            return RadialGradient(
-              center: Alignment(
-                (widget.lightPoints.$1 / rect.width) * 2 - 1,
-                (widget.lightPoints.$2 / rect.height) * 2 - 1
-              ),
-              radius: widget.glare!.radius,
-              tileMode: widget.glare!.tileMode,
-              colors: widget.glare!.colors,
-              stops: widget.glare!.stops,
-            ).createShader(rect);
-          },
-          blendMode: widget.glare!.blendMode,
-          child: child
+        shaderCallback: (rect) {
+          final width = rect.width == 0 ? 1 : rect.width;
+          final height = rect.height == 0 ? 1 : rect.height;
+          return RadialGradient(
+            center: Alignment(
+                (widget.lightPoints.$1 / width) * 2 - 1,
+                (widget.lightPoints.$2 / height) * 2 - 1
+            ),
+            radius: widget.glare!.radius,
+            tileMode: widget.glare!.tileMode,
+            colors: widget.glare!.colors,
+            stops: widget.glare!.stops,
+          ).createShader(rect);
+        },
+        blendMode: widget.glare!.blendMode,
+        child: child
       );
     }
     return child;

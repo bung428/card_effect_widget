@@ -55,6 +55,33 @@ class FilterConfiguration {
   FilterConfiguration({required this.filters});
 }
 
+class GlowConfiguration {
+  final int animateDuration;
+  final int angleDegree;
+  final double borderSize;
+  final double glowSize;
+  final double borderRadius;
+  final List<Color> colors;
+  final List<double> stops;
+
+  GlowConfiguration({
+    this.animateDuration = 4,
+    this.angleDegree = 2,
+    this.glowSize = 7,
+    this.borderSize = 4,
+    this.borderRadius = 12,
+    required this.colors,
+    List<double>? stops,
+  }) : stops = stops ?? _generateColorStops(colors);
+
+  static List<double> _generateColorStops(List<dynamic> colors) {
+    return colors.asMap().entries.map((entry) {
+      double percentageStop = entry.key / (colors.length - 1); // stops 비율 계산
+      return percentageStop;
+    }).toList();
+  }
+}
+
 class ShimmerConfiguration {
   final List<Color> colors;
   final List<double>? stops;
