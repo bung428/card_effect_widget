@@ -111,7 +111,7 @@ mixin OverlayMixin<T extends StatefulWidget> on State<T> {
                   ..rotateY(_rotationAnimation.value),
                 child: (_rotationAnimation.value % (2 * pi)) >= pi / 2 &&
                     (_rotationAnimation.value % (2 * pi)) <= (3 * pi) / 2
-                    ? buildBackCard()
+                    ? backCardWidget() ?? _defaultBackCard()
                     : frontWidget,
               ) : frontWidget,
             ),
@@ -132,19 +132,24 @@ mixin OverlayMixin<T extends StatefulWidget> on State<T> {
     _overlayController.reverse();
   }
 
-  Widget buildBackCard() {
+  Widget? backCardWidget();
+
+  Widget _defaultBackCard() {
     if (widgetSize == null) return const SizedBox.shrink();
-    return Container(
-      width: widgetSize!.width,
-      height: widgetSize!.height,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      alignment: Alignment.center,
-      child: const Text(
-        'Back Side',
-        style: TextStyle(color: Colors.white, fontSize: 16),
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        width: widgetSize!.width,
+        height: widgetSize!.height,
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        alignment: Alignment.center,
+        child: const Text(
+          'Back Side',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:card_effect_widget/enums/image_source_type.dart';
 import 'package:card_effect_widget/models/configuration.dart';
@@ -14,6 +15,7 @@ typedef TouchCallback = void Function(bool isTouch);
 
 class CardHolographicWidget extends StatefulWidget {
   final String image;
+  final String? backImage;
   final int animateAngle;
   final double maxHeight;
   final double aspectRatio;
@@ -34,6 +36,7 @@ class CardHolographicWidget extends StatefulWidget {
     this.aspectRatio = 734 / 1024,
     this.animateAngle = 2,
     this.borderRadius,
+    this.backImage,
     this.glow,
     this.glare,
     this.filter,
@@ -49,6 +52,7 @@ class CardHolographicWidget extends StatefulWidget {
     this.aspectRatio = 734 / 1024,
     this.borderRadius = 12,
     this.animateAngle = 2,
+    this.backImage,
     this.glare,
     this.filter,
     this.mask,
@@ -58,6 +62,7 @@ class CardHolographicWidget extends StatefulWidget {
   factory CardHolographicWidget.network({
     required String image,
     required TouchCallback touchCallback,
+    String? backImage,
     int animateAngle = 2,
     double maxHeight = 360,
     double aspectRatio = 734 / 1024,
@@ -69,6 +74,7 @@ class CardHolographicWidget extends StatefulWidget {
     ShimmerConfiguration? shimmer,
   }) => CardHolographicWidget._(
     image: image,
+    backImage: backImage,
     touchCallback: touchCallback,
     maxHeight: maxHeight,
     aspectRatio: aspectRatio,
@@ -166,6 +172,32 @@ class _CardHolographicWidgetState extends State<CardHolographicWidget>
       onTap: () => showOverlay(context, _overlayKey.currentContext, child),
       child: child,
     ) : SizedBox(width: size.width, height: size.height,);
+  }
+
+  @override
+  Widget? backCardWidget() {
+    if (widget.backImage == null) {
+      return null;
+    } else {
+      return Material(
+        color: Colors.transparent,
+        child: SizedBox(
+          width: size.width,
+          height: size.height,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(widget.borderRadius ?? 0),
+            child: Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.rotationY(pi),
+              child: Image.asset(
+                widget.backImage!,
+                fit: BoxFit.contain,
+              )
+            )
+          ),
+        ),
+      );
+    }
   }
 }
 

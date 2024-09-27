@@ -69,7 +69,7 @@ class _GlowAnimateWidgetState extends State<GlowAnimateWidget>
                     borderRadius: BorderRadius.circular(glow.borderRadius),
                     gradient: SweepGradient(
                         colors: [...glow.colors, ...glow.colors.reversed],
-                        stops: _generateColorStops([...glow.colors, ...glow.colors.reversed]),
+                        // stops: _generateColorStops([...glow.colors, ...glow.colors.reversed]),
                         transform: GradientRotation(_angleAnimation.value)
                     )
                 )
@@ -96,7 +96,7 @@ class _GlowAnimateWidgetState extends State<GlowAnimateWidget>
                             borderRadius: BorderRadius.circular(glow.borderRadius),
                             gradient: SweepGradient(
                                 colors: [...glow.colors, ...glow.colors.reversed],
-                                stops: _generateColorStops([...glow.colors, ...glow.colors.reversed]),
+                                // stops: _generateColorStops([...glow.colors, ...glow.colors.reversed]),
                                 transform: GradientRotation(_angleAnimation.value)
                             )
                         )
@@ -115,10 +115,10 @@ class _GlowAnimateWidgetState extends State<GlowAnimateWidget>
 
   }
 
-  List<double> _generateColorStops(List<dynamic> colors) {
-    return colors.asMap().entries.map((entry) {
-      double percentageStop = entry.key / colors.length;
-      return percentageStop;
-    }).toList();
-  }
+  // List<double> _generateColorStops(List<dynamic> colors) {
+  //   return colors.asMap().entries.map((entry) {
+  //     double percentageStop = entry.key / colors.length;
+  //     return percentageStop;
+  //   }).toList();
+  // }
 }
