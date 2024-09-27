@@ -56,7 +56,6 @@ class _GlowAnimateWidgetState extends State<GlowAnimateWidget>
   Widget build(BuildContext context) {
     final glow = widget.glow;
     return Container(
-      // padding: EdgeInsets.all((glow.glowSize) * 3 + (glow.borderSize) * 3),
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(glow.borderRadius)),
       child: Stack(alignment: Alignment.center, clipBehavior: Clip.none, children: [
@@ -76,33 +75,39 @@ class _GlowAnimateWidgetState extends State<GlowAnimateWidget>
                 )
             )
         ),
-        BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: glow.glowSize, sigmaY: glow.glowSize - 3),
-          child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                  top: glow.glowSize,
-                  right: glow.glowSize,
-                  left: glow.glowSize,
-                  bottom: glow.glowSize,
-                  child: Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(glow.borderRadius),
-                          gradient: SweepGradient(
-                              colors: [...glow.colors, ...glow.colors.reversed],
-                              stops: _generateColorStops([...glow.colors, ...glow.colors.reversed]),
-                              transform: GradientRotation(_angleAnimation.value)
-                          )
-                      )
-                  )
-              ),
-              Padding(
-                padding: EdgeInsets.all(glow.glowSize + glow.borderSize),
-                child: widget.child
-              ),
-            ],
+        ClipRRect(
+          borderRadius: BorderRadius.circular(glow.borderRadius),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: glow.glowSize,
+              sigmaY: glow.glowSize
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                    top: glow.glowSize,
+                    right: glow.glowSize,
+                    left: glow.glowSize,
+                    bottom: glow.glowSize,
+                    child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(glow.borderRadius),
+                            gradient: SweepGradient(
+                                colors: [...glow.colors, ...glow.colors.reversed],
+                                stops: _generateColorStops([...glow.colors, ...glow.colors.reversed]),
+                                transform: GradientRotation(_angleAnimation.value)
+                            )
+                        )
+                    )
+                ),
+                Padding(
+                  padding: EdgeInsets.all(glow.glowSize + glow.borderSize),
+                  child: widget.child
+                ),
+              ],
+            ),
           ),
         ),
       ]),

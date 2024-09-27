@@ -67,7 +67,7 @@ class GlowConfiguration {
   GlowConfiguration({
     this.animateDuration = 4,
     this.angleDegree = 2,
-    this.glowSize = 7,
+    this.glowSize = 5,
     this.borderSize = 4,
     this.borderRadius = 12,
     required this.colors,
