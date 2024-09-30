@@ -154,14 +154,13 @@ class _CardHolographicWidgetState extends State<CardHolographicWidget>
               setState(() {});
             }
           },
-          touchCallback: (value) {
-            widget.touchCallback.call(value);
-            _isOnHover.add(value);
-          },
-          offsetCallback: (double x, double y) {
+          hoverCallback: (value, x, y) {
             _lightX = x;
             _lightY = y;
-            setState(() {});
+            setState(() {
+              widget.touchCallback.call(value);
+              _isOnHover.add(value);
+            });
           },
           child: imageWidget,
         );

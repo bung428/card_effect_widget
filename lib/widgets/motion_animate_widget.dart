@@ -1,8 +1,7 @@
-import 'package:card_effect_widget/widgets/card_holographic_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-typedef OffsetCallback = void Function(double x, double y);
+typedef HoverCallback = void Function(bool isTouch, double x, double y);
 typedef SizeCallback = void Function(Size size);
 
 class MotionAnimateWidget extends StatefulWidget {
@@ -10,8 +9,7 @@ class MotionAnimateWidget extends StatefulWidget {
   final double aspectRatio;
   final double? borderRadius;
   final SizeCallback sizeCallback;
-  final TouchCallback touchCallback;
-  final OffsetCallback offsetCallback;
+  final HoverCallback hoverCallback;
   final Widget child;
 
   const MotionAnimateWidget({
@@ -19,8 +17,7 @@ class MotionAnimateWidget extends StatefulWidget {
     required this.maxHeight,
     required this.aspectRatio,
     required this.sizeCallback,
-    required this.touchCallback,
-    required this.offsetCallback,
+    required this.hoverCallback,
     required this.child,
     this.borderRadius,
   });
@@ -72,7 +69,7 @@ class _MotionAnimateWidgetState extends State<MotionAnimateWidget>
     childSize = size;
     _lightX = size.width / 2;
     _lightY = size.height / 2;
-    widget.offsetCallback.call(_lightX, _lightY);
+    widget.hoverCallback.call(false, _lightX, _lightY);
     widget.sizeCallback.call(size);
 
     setState(() {});
@@ -91,7 +88,7 @@ class _MotionAnimateWidgetState extends State<MotionAnimateWidget>
     _yRotation = x * 0.5;
     _lightX = localPosition.dx;
     _lightY = localPosition.dy;
-    widget.offsetCallback.call(_lightX, _lightY);
+    widget.hoverCallback.call(true, _lightX, _lightY);
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -127,7 +124,7 @@ class _MotionAnimateWidgetState extends State<MotionAnimateWidget>
             _yRotation = _yRotationAnimation.value;
             _lightX = _lightXAnimation.value;
             _lightY = _lightYAnimation.value;
-            widget.offsetCallback.call(_lightX, _lightY);
+            widget.hoverCallback.call(false, _lightX, _lightY);
           });
         });
       }
@@ -147,32 +144,32 @@ class _MotionAnimateWidgetState extends State<MotionAnimateWidget>
             child: MouseRegion(
               onHover: (event) {
                 isOnHover = true;
-                widget.touchCallback.call(true);
+                // widget.touchCallback.call(true);
 
                 _onPointerHover(event.localPosition);
               },
               onExit: (event) {
                 isOnHover = false;
-                widget.touchCallback.call(false);
+                // widget.touchCallback.call(false);
 
                 _onPointerExit();
               },
               child: Listener(
                 onPointerHover: (details) {
                   isOnHover = true;
-                  widget.touchCallback.call(true);
+                  // widget.touchCallback.call(true);
 
                   _onPointerHover(details.localPosition);
                 },
                 onPointerMove: (details) {
                   isOnHover = true;
-                  widget.touchCallback.call(true);
+                  // widget.touchCallback.call(true);
 
                   _onPointerHover(details.localPosition);
                 },
                 onPointerUp: (_) {
                   isOnHover = false;
-                  widget.touchCallback.call(false);
+                  // widget.touchCallback.call(false);
 
                   _onPointerExit();
                 },
