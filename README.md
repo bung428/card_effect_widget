@@ -1,4 +1,4 @@
-# Card Holographic Widget
+# Card effect Widget
 
 # How to use
 - asset image
@@ -42,12 +42,12 @@ CardHolographicWidget.network({
    - GlareConfiguration.flash
    - GlareConfiguration.focus
 
-2. Filter (FilterType)
+2. Filter (FilterType) => cf. hue type is the degree, and other types except hue are between 0 ~ 1
    - contrast
    - grayScale
    - sepia
    - invert
-   - hue (degree)
+   - hue
    - brightness
    - saturate
    - opacity

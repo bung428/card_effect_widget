@@ -5,8 +5,8 @@ typedef HoverCallback = void Function(bool isTouch, double x, double y);
 typedef SizeCallback = void Function(Size size);
 
 class MotionAnimateWidget extends StatefulWidget {
-  final double maxHeight;
-  final double aspectRatio;
+  final double? maxHeight;
+  final double? aspectRatio;
   final double? borderRadius;
   final SizeCallback sizeCallback;
   final HoverCallback hoverCallback;
@@ -14,11 +14,11 @@ class MotionAnimateWidget extends StatefulWidget {
 
   const MotionAnimateWidget({
     super.key,
-    required this.maxHeight,
-    required this.aspectRatio,
     required this.sizeCallback,
     required this.hoverCallback,
     required this.child,
+    this.maxHeight,
+    this.aspectRatio,
     this.borderRadius,
   });
 
@@ -140,7 +140,7 @@ class _MotionAnimateWidgetState extends State<MotionAnimateWidget>
           height: widget.maxHeight,
           color: Colors.transparent,
           child: AspectRatio(
-            aspectRatio: widget.aspectRatio,
+            aspectRatio: widget.aspectRatio ?? 3/4,
             child: MouseRegion(
               onHover: (event) {
                 isOnHover = true;

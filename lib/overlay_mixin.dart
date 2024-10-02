@@ -20,7 +20,7 @@ mixin OverlayMixin<T extends StatefulWidget> on State<T> {
   bool _isCompleted = false;
   bool isOverlay = false;
 
-  void initializeOverlay(TickerProvider vsync, [int? angle]) {
+  void initializeOverlay(TickerProvider vsync, double scale, [int? angle]) {
     if (angle != null) {
       _overlayAnimateAngle = angle;
     }
@@ -37,12 +37,12 @@ mixin OverlayMixin<T extends StatefulWidget> on State<T> {
 
     _rotationAnimation = Tween<double>(begin: 0, end: pi * (_overlayAnimateAngle ?? 2))
         .animate(CurvedAnimation(
-        parent: _overlayController,
-        curve: Curves.easeInOut,
-      ),
+      parent: _overlayController,
+      curve: Curves.easeInOut,
+    ),
     );
 
-    _scaleAnimation = Tween<double>(begin: 1, end: 1.3).animate(
+    _scaleAnimation = Tween<double>(begin: 1, end: scale).animate(
       CurvedAnimation(
         parent: _overlayController,
         curve: Curves.easeInOut,
@@ -142,22 +142,21 @@ mixin OverlayMixin<T extends StatefulWidget> on State<T> {
         width: widgetSize!.width,
         height: widgetSize!.height,
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(18),
+            color: Colors.black.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(width: 1, color: Colors.white)
         ),
         alignment: Alignment.center,
-        child: const Text(
-          'Back Side',
-          style: TextStyle(color: Colors.white, fontSize: 16),
-        ),
       ),
     );
   }
 
   @override
   void dispose() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
+    if (_overlayEntry != null && _overlayEntry!.mounted) {
+      _overlayEntry?.remove();
+      _overlayEntry = null;
+    }
 
     _overlayController.dispose();
     super.dispose();

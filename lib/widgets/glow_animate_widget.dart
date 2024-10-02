@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:card_effect_widget/models/configuration.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 class GlowAnimateWidget extends StatefulWidget {
   final Widget child;
@@ -32,7 +33,11 @@ class _GlowAnimateWidgetState extends State<GlowAnimateWidget>
         vsync: this,
         duration: Duration(seconds: widget.glow.animateDuration)
     );
-    _controller.addListener(() => setState(() {}));
+    _controller.addListener(() => SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {});
+      }
+    }));
     _angleAnimation = Tween<double>(
         begin: 0.1,
         end: widget.glow.angleDegree * pi
@@ -79,8 +84,8 @@ class _GlowAnimateWidgetState extends State<GlowAnimateWidget>
           borderRadius: BorderRadius.circular(glow.borderRadius),
           child: BackdropFilter(
             filter: ImageFilter.blur(
-              sigmaX: glow.glowSize,
-              sigmaY: glow.glowSize
+                sigmaX: glow.glowSize,
+                sigmaY: glow.glowSize
             ),
             child: Stack(
               alignment: Alignment.center,
@@ -96,15 +101,14 @@ class _GlowAnimateWidgetState extends State<GlowAnimateWidget>
                             borderRadius: BorderRadius.circular(glow.borderRadius),
                             gradient: SweepGradient(
                                 colors: [...glow.colors, ...glow.colors.reversed],
-                                // stops: _generateColorStops([...glow.colors, ...glow.colors.reversed]),
                                 transform: GradientRotation(_angleAnimation.value)
                             )
                         )
                     )
                 ),
                 Padding(
-                  padding: EdgeInsets.all(glow.glowSize + glow.borderSize),
-                  child: widget.child
+                    padding: EdgeInsets.all(glow.glowSize + glow.borderSize),
+                    child: widget.child
                 ),
               ],
             ),
@@ -112,13 +116,5 @@ class _GlowAnimateWidgetState extends State<GlowAnimateWidget>
         ),
       ]),
     );
-
   }
-
-  // List<double> _generateColorStops(List<dynamic> colors) {
-  //   return colors.asMap().entries.map((entry) {
-  //     double percentageStop = entry.key / colors.length;
-  //     return percentageStop;
-  //   }).toList();
-  // }
 }
