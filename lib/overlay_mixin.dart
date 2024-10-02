@@ -91,32 +91,43 @@ mixin OverlayMixin<T extends StatefulWidget> on State<T> {
     ));
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => AnimatedBuilder(
-        animation: _overlayController,
-        builder: (context, _) {
-          final frontWidget = Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          );
-          return Positioned(
-            left: _positionAnimation.value.dx,
-            top: _positionAnimation.value.dy,
-            width: widgetSize!.width,
-            height: widgetSize!.height,
-            child: GestureDetector(
-              onTap: hideOverlay,
-              child: !_isCompleted ? Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..rotateY(_rotationAnimation.value),
-                child: (_rotationAnimation.value % (2 * pi)) >= pi / 2 &&
-                    (_rotationAnimation.value % (2 * pi)) <= (3 * pi) / 2
-                    ? backCardWidget() ?? _defaultBackCard()
-                    : frontWidget,
-              ) : frontWidget,
+      builder: (context) => Stack(
+        children: [
+          GestureDetector(
+            child: Container(
+              color: Colors.transparent,
+              width: double.infinity,
+              height: double.infinity,
             ),
-          );
-        },
+          ),
+          AnimatedBuilder(
+            animation: _overlayController,
+            builder: (context, _) {
+              final frontWidget = Transform.scale(
+                scale: _scaleAnimation.value,
+                child: child,
+              );
+              return Positioned(
+                left: _positionAnimation.value.dx,
+                top: _positionAnimation.value.dy,
+                width: widgetSize!.width,
+                height: widgetSize!.height,
+                child: GestureDetector(
+                  onTap: hideOverlay,
+                  child: !_isCompleted ? Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()
+                      ..rotateY(_rotationAnimation.value),
+                    child: (_rotationAnimation.value % (2 * pi)) >= pi / 2 &&
+                        (_rotationAnimation.value % (2 * pi)) <= (3 * pi) / 2
+                        ? backCardWidget() ?? _defaultBackCard()
+                        : frontWidget,
+                  ) : frontWidget,
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
 
