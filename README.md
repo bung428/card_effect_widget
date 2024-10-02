@@ -5,8 +5,10 @@
 ````
 CardHolographicWidget.asset({
     image: 'asssts/images/image.png',
+    backImage: /// card back image
     touchCallback: (value) {
-        /// todo callabck.
+        /// todo callabck. 
+        /// Callback for scrolling prevention, etc. during animation movement
     },
     sourceType: ImageSourceType.asset, // default value
     maxHeight: 360, // default value
@@ -21,8 +23,10 @@ CardHolographicWidget.asset({
 ````
 CardHolographicWidget.network({
     image: 'Network image url',
+    backImage: /// card back image
     touchCallback: (value) {
         /// todo callabck.
+        /// Callback for scrolling prevention, etc. during animation movement
     },
     sourceType: ImageSourceType.network, // default value
     maxHeight: 360, // default value
